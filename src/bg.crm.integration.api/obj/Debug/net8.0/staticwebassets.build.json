@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "yqot8q1O2u0iLk9QsEz72dA6QRCFkIuXI++66UAw6YY=",
+  "Source": "bg.crm.integration.api",
+  "BasePath": "_content/bg.crm.integration.api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

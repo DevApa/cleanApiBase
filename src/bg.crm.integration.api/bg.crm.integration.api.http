@@ -1,0 +1,6 @@
+@bg.crm.integration.api_HostAddress = http://localhost:5134
+
+GET {{bg.crm.integration.api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
