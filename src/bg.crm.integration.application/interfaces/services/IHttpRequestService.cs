@@ -12,11 +12,14 @@ namespace bg.crm.integration.application.interfaces.services
             Dictionary<string, string>? headers = null,
             Dictionary<string, string>? queryParams = null,
             bool isFormEncoded = false,
-            string? token = null,
+            bool token = false,
+            Dictionary<string, string>? tokenParams = null,
             int timeout = 1500,
             Func<TSource, TDestination>? mapFunc = null,
             JsonSerializerSettings? jsonSettings = null,
-            [CallerMemberName] string? callerName = null
+            [CallerMemberName] string? callerName = null,
+            Dictionary<string, string>? fromData = null,
+            string? contentType = ""
             );
     }
 }

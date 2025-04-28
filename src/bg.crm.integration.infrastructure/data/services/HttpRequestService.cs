@@ -27,19 +27,31 @@ namespace bg.crm.integration.infrastructure.data.services
             Dictionary<string, string>? headers = null,
             Dictionary<string, string>? queryParams = null,
             bool isFormEncoded = false,
-            string? token = null,
+            bool token = false,
+            Dictionary<string, string>? tokenParams = null,
             int timeout = 1500,
             Func<TSource, TDestination>? mapFunc = null,
             JsonSerializerSettings? jsonSettings = null,
-            [CallerMemberName] string? callerName = null)
+            [CallerMemberName] string? callerName = null,
+            Dictionary<string, string>? fromData = null,
+            string? contentType = "")
         {
-            ValidateJobRequestParameters<TSource, TDestination>(url, method, content, timeout, mapFunc);
+            ValidateJobRequestParameters<TSource, TDestination>(url, method, content, timeout, mapFunc, contentType, token, tokenParams);
             Log.Information("Executing HTTP request: {Method} {Url}", method, url);
+
             var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromMilliseconds(timeout);
-            var requestMessage = BuildHttpRequestMessage(url, method, content, headers, queryParams, isFormEncoded, null, token);
+
+            var requestMessage = BuildHttpRequestMessage(url, method, content, headers, queryParams, isFormEncoded, fromData, contentType);
             try
             {
+                if (token && tokenParams != null)
+                {
+                    Task<string> tokenTask = _tokenService.GetTokenAsync(tokenParams);
+                    var tokenValue = await tokenTask.ConfigureAwait(false);
+                    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenValue);
+                }
+
                 var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
                 var bodyResponse = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 
@@ -53,30 +65,60 @@ namespace bg.crm.integration.infrastructure.data.services
 
                 return result;
             }
-            catch (System.Exception)
+            catch (TaskCanceledException ex)
             {
-
-                throw;
+                Log.Error(ex, "La solicitud [{method}] desde {Caller} ha excedido el tiempode espera", method, callerName);
+                throw new TimeoutException($"Request to {url} timed out after {timeout} milliseconds.", ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.Error(ex, "Error en la solicitud [{method}] desde {Caller}: ", method, callerName);
+                throw new HttpRequestException($"Error al realizar la solicitud HTTP: {ex.Message} ", ex);
+            }
+            catch (JsonSerializationException ex)
+            {
+                Log.Error(ex, "JSON serialization error: {Url}", url);
+                throw new JsonSerializationException($"Error al intentar deserializar response de la {url}.", ex);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Se produjo un error inesperado: {Url}", url);
+                throw new Exception($"Se produjo un error inesperado al procesar la solicitud para {url}.", ex);
+            }
+            finally
+            {
+                requestMessage.Dispose();
+                Log.Information("[{method}] {Caller} {url}", method, callerName, url);
             }
         }
 
+        #region Validation Parameters
         private void ValidateJobRequestParameters<TSource, TDestination>(
-            string url, HttpMethod method,
+            string url,
+            HttpMethod method,
             object? content,
             int timeout,
             Func<TSource, TDestination>? mapFunc,
-            string? contentType = "")
+            string? contentType = "",
+            bool token = false,
+            Dictionary<string, string>? tokenParams = null)
         {
             if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentNullException(nameof(url), "URL cannot be null or empty.");
+                throw new ArgumentNullException(nameof(url), "La dirección URL no puede ser nula o vacía.");
+            if (method == null)
+                throw new ArgumentNullException(nameof(method), "El método HTTP no puede ser vacío.");
             if (method == HttpMethod.Post || method == HttpMethod.Put && content == null && contentType != "application/x-www-form-urlencoded")
-                throw new ArgumentNullException(nameof(method), "HTTP method cannot be null.");
+                throw new ArgumentNullException(nameof(method), "El método HTTP no puede ser vacío.");
             if (timeout <= 0)
-                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(timeout), "El tiempo de espera tiene que ser mayor que cero.");
             if (typeof(TSource) != typeof(TDestination) && mapFunc == null)
-                throw new ArgumentNullException(nameof(mapFunc), "Mapping function cannot be null.");
+                throw new ArgumentNullException(nameof(mapFunc), "La función de conversión no puede ser nula.");
+            if (token && tokenParams == null)
+                throw new ArgumentNullException(nameof(tokenParams), "Los parámetros de token no pueden ser nulos.");
         }
+        #endregion
 
+        #region Building Sin Token
         private static HttpRequestMessage BuildHttpRequestMessage(
             string url,
             HttpMethod method,
@@ -84,9 +126,9 @@ namespace bg.crm.integration.infrastructure.data.services
             Dictionary<string, string>? headers,
             Dictionary<string, string>? queryParams,
             bool isFormEncoded,
-            Dictionary<string, string>? fromData,
-            string? token,
-            string? contentType = "")
+            Dictionary<string, string>? fromData = null,
+            string? contentType = ""
+           )
         {
             if (queryParams != null && queryParams.Any())
             {
@@ -119,5 +161,7 @@ namespace bg.crm.integration.infrastructure.data.services
             }
             return requestMessage;
         }
+        #endregion
+
     }
 }

@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace bg.crm.integration.application.interfaces.services
 {
     public interface ITokenService
     {
-        
+        Task<string> GetTokenAsync(Dictionary<string, string>? tokenParams);
     }
 }
