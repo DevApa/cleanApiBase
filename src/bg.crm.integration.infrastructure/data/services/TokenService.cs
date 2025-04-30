@@ -31,7 +31,7 @@ namespace bg.crm.integration.infrastructure.data.services
 
         private async Task<string> RefreshTokenAsync(Dictionary<string, string> tokenParams)
         {
-            var url = $"{_configuration["Authentication:url"]}outh2/token";
+            var url = $"{_configuration["ServConfig:Auth:urlService"]}outh2/token";
             using var client = _httpClientFactory.CreateClient();
 
             var body = new Dictionary<string, string>
@@ -58,8 +58,8 @@ namespace bg.crm.integration.infrastructure.data.services
                     _memoryCache.Set(CacheKey!, tokenResponse.AccessToken, TimeSpan.FromSeconds(int.Parse(tokenResponse.ExpiresIn!) - 60));
                     return tokenResponse.AccessToken;
                 }
-                else                
-                    throw new Exception("Token response is null or access token is empty.");                
+                else
+                    throw new Exception("Token response is null or access token is empty.");
             }
             catch (HttpRequestException ex)
             {

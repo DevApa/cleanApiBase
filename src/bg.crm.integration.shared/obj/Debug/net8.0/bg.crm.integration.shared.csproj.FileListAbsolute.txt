@@ -22,3 +22,4 @@ D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.shared\obj\
 D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.shared\obj\Debug\net8.0\refint\bg.crm.integration.shared.dll
 D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.shared\obj\Debug\net8.0\bg.crm.integration.shared.pdb
 D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.shared\obj\Debug\net8.0\ref\bg.crm.integration.shared.dll
+D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.shared\obj\Debug\net8.0\bg.crm.integration.shared.sourcelink.json

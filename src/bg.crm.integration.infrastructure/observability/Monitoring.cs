@@ -16,7 +16,8 @@ namespace bg.crm.integration.infrastructure.observability
         public static IServiceCollection AddLoggingService(this IServiceCollection services, IConfiguration configuration)
         {
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
+                .ReadFrom
+                .Configuration(configuration)
                 .CreateLogger();
 
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
@@ -31,7 +32,9 @@ namespace bg.crm.integration.infrastructure.observability
             {
                 tracerBuilder
                 .AddSource(configuration["Jaeger:Telemetry:Source"] ?? typeof(Monitoring).Namespace ?? string.Empty)
-                .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(configuration["Jaeger:Telemetry:ServiceName"] ?? string.Empty))
+                .SetResourceBuilder(
+                    ResourceBuilder.CreateDefault()
+                    .AddService(serviceName: configuration["Jaeger:Telemetry:ServiceName"] ?? typeof(Monitoring).Namespace ?? string.Empty))
                 .AddHttpClientInstrumentation()
                 .AddAspNetCoreInstrumentation(options =>
                 {
@@ -42,7 +45,7 @@ namespace bg.crm.integration.infrastructure.observability
                             var context = httpRequest.HttpContext;
                             var traceId = context.TraceIdentifier;
                             if (!string.IsNullOrEmpty(traceId))
-                                activity.SetTag("traceId", traceId);
+                                activity.SetTag("Log-TraceId", traceId);
 
                             var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()!.Split(',').Select(x => x.Trim()).FirstOrDefault();
                             if (!string.IsNullOrEmpty(forwardedFor))
@@ -53,15 +56,15 @@ namespace bg.crm.integration.infrastructure.observability
                             var clientAddress = string.IsNullOrWhiteSpace(remoteIp) ? remoteAddHeader : remoteIp;
 
                             if (!string.IsNullOrEmpty(clientAddress))
-                                activity.SetTag("client-Address", clientAddress);
+                                activity.SetTag("Client-Address", clientAddress);
                         }
                     };
                 })
                 .AddSqlClientInstrumentation(options =>
                 {
                     options.EnableConnectionLevelAttributes = true;
-                    options.SetDbStatementForText = true;
                     options.SetDbStatementForStoredProcedure = true;
+                    options.SetDbStatementForText = true;
                     options.RecordException = false;
                     options.Enrich = (activity, x, y) => activity.SetTag("db.type", "sql");
 
@@ -72,7 +75,6 @@ namespace bg.crm.integration.infrastructure.observability
                     jaegerOptions.AgentPort = portNumber;
                 });
             });
-
             return services;
         }
 

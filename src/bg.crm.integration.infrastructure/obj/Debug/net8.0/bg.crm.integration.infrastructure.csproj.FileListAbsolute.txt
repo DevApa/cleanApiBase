@@ -36,3 +36,4 @@ D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.infrastruct
 D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.infrastructure\obj\Debug\net8.0\ref\bg.crm.integration.infrastructure.dll
 D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.infrastructure\bin\Debug\net8.0\bg.crm.integration.infrastructure.runtimeconfig.json
 D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.infrastructure\obj\Debug\net8.0\bg.crm.integration.infrastructure.genruntimeconfig.cache
+D:\caparicio\source\dotnet\bg.crm.integration\src\bg.crm.integration.infrastructure\obj\Debug\net8.0\bg.crm.integration.infrastructure.sourcelink.json

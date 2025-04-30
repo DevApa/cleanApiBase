@@ -1,5 +1,10 @@
 using AutoMapper;
+using bg.crm.integration.application.dtos.models;
+using bg.crm.integration.application.dtos.models.execptions;
+using bg.crm.integration.application.dtos.models.productos.creditos;
+using bg.crm.integration.application.dtos.responses;
 using bg.crm.integration.application.interfaces.services;
+using bg.crm.integration.domain.entities.producto.creditos;
 using bg.crm.integration.domain.entities.producto.cuenta;
 using bg.crm.integration.shared.extensions;
 using Microsoft.Extensions.Configuration;
@@ -19,17 +24,17 @@ namespace bg.crm.integration.infrastructure.data.repositories
             _mapper = mapper;
         }
 
-        public async Task<ResponseCuenta> ConsultaCuenta(RequestCuenta request)
+        public async Task<ServiceResponseDto<CreditoResponseDto>> ConsultarResumenCreditoRepositoryAsync(CreditoRequestDto request)
         {
             var uri = $"{_Configuration["InfraConfig:Micros:Productos:urlService"]!}/api/Producto/ConsultaCuenta";
             var Parameters = new Dictionary<string, string>
             {
-                { "resource", _Configuration["InfraConfig:Micros:Productos:resource"]! },
-                { "client_secret", _Configuration["InfraConfig:Micros:Productos:client_secret"]! },
-                { "client_id", _Configuration["InfraConfig:Micros:Productos:client_id"]! }
+                { "resource", _Configuration["ServConfig:Auth:resource"]! },
+                { "client_secret", _Configuration["ServConfig:Auth:client_secret"]! },
+                { "client_id", _Configuration["ServConfig:Auth:client_id"]! }
             };
 
-            var response = await _httpRequestService.ExecuteRequest<RequestCuenta, ResponseCuenta>(
+            var response = await _httpRequestService.ExecuteRequest<MsDtoResponseSuccess<CreditoResponse>, CreditoResponseDto>(
                 uri,
                 HttpMethod.Get,
                 request,
@@ -38,10 +43,21 @@ namespace bg.crm.integration.infrastructure.data.repositories
                 false,
                 true,
                 Parameters,
-                mapFunc: source=>_mapper.Map<ResponseCuenta>(source)
+                mapFunc: source => _mapper.Map<CreditoResponseDto>(source.Data!)
             );
-            
-            return response;
+
+            return (response != null) ? new ServiceResponseDto<CreditoResponseDto>
+            {
+                CodigoRetorno = 0,
+                MensajeRetorno = "Consulta exitosa",
+                ServiceResponse = response
+            }
+            : new ServiceResponseDto<CreditoResponseDto>
+            {
+                CodigoRetorno = 1,
+                MensajeRetorno = "La consulta no devolvió resultados",
+                ServiceResponse = new()
+            };
         }
     }
 }
