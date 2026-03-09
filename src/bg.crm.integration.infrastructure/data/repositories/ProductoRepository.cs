@@ -37,13 +37,8 @@ namespace bg.crm.integration.infrastructure.data.repositories
             var response = await _httpRequestService.ExecuteRequest<MsDtoResponseSuccess<CreditoResponse>, CreditoResponseDto>(
                 uri,
                 HttpMethod.Get,
-                request,
-                null,
-                null,
-                false,
-                true,
-                Parameters,
-                mapFunc: source => _mapper.Map<CreditoResponseDto>(source.Data!)
+                headers:Parameters,
+                mapFunc: source => source.Data!
             );
 
             return (response != null) ? new ServiceResponseDto<CreditoResponseDto>
